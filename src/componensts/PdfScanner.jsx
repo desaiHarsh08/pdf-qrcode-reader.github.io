@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
-// import jsQR from 'jsqr';
+import jsQR from 'jsqr';
 import html2canvas from 'html2canvas';
 import myImage from '../assets/img5.png'
 
@@ -30,46 +30,48 @@ const PdfScanner = () => {
             // Load the PDF file using pdf.js
             const pdf = await loadPdf(pdfDataArrayBuffer);
 
-            // Variables to store scanned QR code data and extracted number
-            let scannedQRCodeData = "";
-            let extractedNumber = "";
-
             // Iterate through each page of the PDF
             for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                 const page = await pdf.getPage(pageNum);
-                const textContent = await page.getTextContent();
 
-                // Iterate through text content and try to find QR codes
-                for (const item of textContent.items) {
-                    const text = item.str;
-                    // Match 7-digit QR codes
-                    const matches = text.match(/\b\d{7}\b/);
+                // Convert the PDF page to an image using html2canvas
+                const canvas = await pageToCanvas(page);
 
-                    if (matches) {
-                        for (const match of matches) {
-                            scannedQRCodeData += match + "\n";
-                        }
-                    }
+                // Extract QR code data from the image using jsQR
+                const qrCodeData = extractQRCodeDataFromImage(canvas);
+
+                if (qrCodeData) {
+                    console.log("QR Code Data:", qrCodeData);
+                    // Handle qrCodeData as needed
+                    captureAndSaveImage(qrCodeData)
                 }
-            }
-
-            // Extract a number from the scanned QR code data
-            const numberRegex = /\d+/;
-            const numberMatch = scannedQRCodeData.match(numberRegex);
-
-            if (numberMatch) {
-                extractedNumber = numberMatch[0];
-                setQrCodeData(extractedNumber); // Set the extracted number in the state
-
-                // Capture and save the content of the div
-                captureAndSaveImage(extractedNumber);
-            } else {
-                alert('No QR code containing a 7-digit number found in the PDF.');
             }
         }
     };
 
-  
+    // Function to convert a PDF page to a canvas
+    const pageToCanvas = async (page) => {
+        const viewport = page.getViewport({ scale: 1.0 });
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        await page.render({ canvasContext: context, viewport: viewport }).promise;
+        return canvas;
+    };
+
+    // Function to extract QR code data from a canvas using jsQR
+    const extractQRCodeDataFromImage = (canvas) => {
+        const context = canvas.getContext('2d');
+        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        if (code) {
+            return code.data;
+        }
+        return null;
+    };
+
+
     // Function to capture and save the content of the div as an image
     const captureAndSaveImage = async (filename) => {
         const captureImageBox = document.getElementById('captureImageBox');
