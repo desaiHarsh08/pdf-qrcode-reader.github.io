@@ -1,146 +1,7 @@
-// import React, { useState } from 'react';
-// import * as pdfjsLib from 'pdfjs-dist';
-// import jsQR from 'jsqr';
-// import html2canvas from 'html2canvas';
-
-// // Set worker paths
-// pdfjsLib.GlobalWorkerOptions.workerSrc = require('pdfjs-dist/build/pdf.worker.js');
-// pdfjsLib.GlobalWorkerOptions.workerSrc = require('pdfjs-dist/build/pdf.worker.entry.js');
-
-
-
-// const PdfScanner = () => {
-//     const [selectedFile, setSelectedFile] = useState(null);
-//     const [qrCodeData, setQrCodeData] = useState('');
-
-//     const handleFileChange = (e) => {
-//         const files = e.target.files; // An array of selected files
-//         setSelectedFile(files); // Store the array of files in state
-//     };
-
-//     const scanQrCode = async () => {
-//         console.log('in scanqrcode')
-//         if (!selectedFile) {
-//             alert('Please select a PDF file.');
-//             return;
-//         }
-//         console.log('in scanqrcode after')
-
-
-//         for (const file of selectedFile) {
-//             const pdfDataArrayBuffer = await readFileAsArrayBuffer(selectedFile);
-
-//             // Load the PDF file using pdf.js
-//             const pdf = await loadPdf(pdfDataArrayBuffer);
-
-//             // Variables to store scanned QR code data and extracted number
-//             let scannedQRCodeData = "";
-//             let extractedNumber = "";
-
-//             // Iterate through each page of the PDF
-//             for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-//                 const page = await pdf.getPage(pageNum);
-//                 const textContent = await page.getTextContent();
-
-//                 // Iterate through text content and try to find QR codes
-//                 for (const item of textContent.items) {
-//                     const text = item.str;
-//                     // Match 7-digit QR codes
-//                     const matches = text.match(/\b\d{7}\b/);
-
-//                     if (matches) {
-//                         for (const match of matches) {
-//                             scannedQRCodeData += match + "\n";
-//                         }
-//                     }
-//                 }
-//             }
-
-//             // Extract a number from the scanned QR code data
-//             const numberRegex = /\d+/;
-//             const numberMatch = scannedQRCodeData.match(numberRegex);
-
-//             if (numberMatch) {
-//                 extractedNumber = numberMatch[0];
-//                 setQrCodeData(extractedNumber); // Set the extracted number in the state
-
-//                 // Capture and save the content of the div
-//                 captureAndSaveImage(extractedNumber);
-//             } else {
-//                 alert('No QR code containing a 7-digit number found in the PDF.');
-//             }
-//         }
-
-
-
-//     };
-
-
-//     // Function to capture and save the content of the div as an image
-//     const captureAndSaveImage = async (filename) => {
-//         const captureImageBox = document.getElementById('captureImageBox');
-
-//         if (captureImageBox) {
-//             const canvas = await html2canvas(captureImageBox); // Capture the content
-//             const imageBlob = await new Promise((resolve) => {
-//                 canvas.toBlob((blob) => {
-//                     resolve(blob);
-//                 }, 'image/jpeg');
-//             });
-
-//             // Create a download link for the image
-//             const downloadLink = document.createElement('a');
-//             downloadLink.href = URL.createObjectURL(imageBlob);
-//             downloadLink.download = `${filename}.jpeg`;
-//             downloadLink.click();
-//         }
-//     };
-
-//     const readFileAsArrayBuffer = (file) => {
-//         return new Promise((resolve, reject) => {
-//             const reader = new FileReader();
-//             reader.onload = () => resolve(reader.result);
-//             reader.onerror = (error) => reject(error);
-//             reader.readAsArrayBuffer(file);
-//         });
-//     };
-
-//     const loadPdf = (dataArrayBuffer) => {
-//         return pdfjsLib.getDocument({ data: dataArrayBuffer }).promise;
-//     };
-
-
-
-//     return (
-//         <div className='container py-2'>
-
-//             <h1 className='text-center text-xl '>PDF QR Code Reader</h1>
-//             <input type="file" accept=".pdf" onChange={handleFileChange} multiple />
-//             <button onClick={scanQrCode}>Scan QR Code in PDF</button>
-//             {qrCodeData && (
-//                 <div>
-//                     <h2>QR Code Data:</h2>
-//                     <p>{qrCodeData}</p>
-//                 </div>
-//             )}
-
-
-//             <div className="captureImageBox" id='captureImageBox'>
-
-//             </div>
-//         </div>
-//     )
-// }
-
-// export default PdfScanner
-
-
-
-
 
 import React, { useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
-import jsQR from 'jsqr';
+// import jsQR from 'jsqr';
 import html2canvas from 'html2canvas';
 import myImage from '../assets/img5.png'
 
@@ -208,105 +69,45 @@ const PdfScanner = () => {
         }
     };
 
+  
     // Function to capture and save the content of the div as an image
-    // const captureAndSaveImage = async (filename) => {
-    //     const captureImageBox = document.getElementById('captureImageBox');
+    const captureAndSaveImage = async (filename) => {
+        const captureImageBox = document.getElementById('captureImageBox');
 
-    //     if (captureImageBox) {
-    //         const canvas = await html2canvas(captureImageBox); // Capture the content
-    //         const imageBlob = await new Promise((resolve) => {
-    //             canvas.toBlob((blob) => {
-    //                 resolve(blob);
-    //             }, 'image/jpeg');
-    //         });
+        if (captureImageBox) {
+            try {
+                const canvas = await html2canvas(captureImageBox); // Capture the content
+                const dataURL = canvas.toDataURL('image/jpeg');
 
-    //         // Create a download link for the image
-    //         const downloadLink = document.createElement('a');
-    //         downloadLink.href = URL.createObjectURL(imageBlob);
-    //         downloadLink.download = `${filename}.jpeg`;
-    //         downloadLink.click();
-    //     }
-    // };
-    
+                // Create a blob from the dataURL
+                const blob = dataURItoBlob(dataURL);
 
-// Function to capture and save the content of the div as an image
-const captureAndSaveImage = async (filename) => {
-    const captureImageBox = document.getElementById('captureImageBox');
-
-    if (captureImageBox) {
-        try {
-            const canvas = await html2canvas(captureImageBox); // Capture the content
-            const dataURL = canvas.toDataURL('image/jpeg');
-
-            // Create a blob from the dataURL
-            const blob = dataURItoBlob(dataURL);
-
-            // Create a download link for the image
-            const downloadLink = document.createElement('a');
-            downloadLink.href = window.URL.createObjectURL(blob);
-            downloadLink.download = `${filename}.jpg`;
-            downloadLink.click();
-        } catch (error) {
-            console.error('Error capturing or saving image:', error);
-            alert('Error capturing or saving image. Please try again.');
+                // Create a download link for the image
+                const downloadLink = document.createElement('a');
+                downloadLink.href = window.URL.createObjectURL(blob);
+                downloadLink.download = `${filename}.jpg`;
+                downloadLink.click();
+            } catch (error) {
+                console.error('Error capturing or saving image:', error);
+                alert('Error capturing or saving image. Please try again.');
+            }
         }
-    }
-};
+    };
 
-// Helper function to convert data URI to Blob
-const dataURItoBlob = (dataURI) => {
-    const byteString = atob(dataURI.split(',')[1]);
-    const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
-    const ab = new ArrayBuffer(byteString.length);
-    const ia = new Uint8Array(ab);
+    // Helper function to convert data URI to Blob
+    const dataURItoBlob = (dataURI) => {
+        const byteString = atob(dataURI.split(',')[1]);
+        const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
 
-    for (let i = 0; i < byteString.length; i++) {
-        ia[i] = byteString.charCodeAt(i);
-    }
+        for (let i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+        }
 
-    return new Blob([ab], { type: mimeString });
-};
+        return new Blob([ab], { type: mimeString });
+    };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// const captureAndSaveImage = async (filename) => {
-//     const captureImageBox = document.getElementById('captureImageBox');
-
-//     if (captureImageBox) {
-//         const canvas = await html2canvas(captureImageBox); // Capture the content
-//         const imageBlob = await new Promise((resolve) => {
-//             canvas.toBlob((blob) => {
-//                 resolve(blob);
-//             }, 'image/jpeg');
-//         });
-
-//         // Create a data URL for the image
-//         const dataURL = canvas.toDataURL('image/jpeg');
-
-//         // Create a download link for the image
-//         const downloadLink = document.createElement('a');
-//         downloadLink.href = dataURL;
-//         downloadLink.download = `${filename}.jpeg`;
-//         document.body.appendChild(downloadLink); // Append the link to the DOM
-//         downloadLink.click();
-
-//         // Clean up by removing the link from the DOM
-//         document.body.removeChild(downloadLink);
-//     }
-// };
 
 
     const readFileAsArrayBuffer = (file) => {
