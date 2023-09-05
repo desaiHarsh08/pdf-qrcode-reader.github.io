@@ -128,7 +128,7 @@ const PdfScanner = () => {
     return (
         <div className='h-screen'>
             <nav className='flex  justify-center items-center text-white bg-black py-3'>
-                <h1 className='text-center text-2xl font-medium'>PDF QR Code Reader</h1>
+                <h1 className='text-center text-2xl font-medium'>PDF image extraction and renaming</h1>
             </nav>
             <div className="w-full  h-[92%] ">
 
