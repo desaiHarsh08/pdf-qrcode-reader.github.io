@@ -11,7 +11,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = require('pdfjs-dist/build/pdf.worker.en
 
 const PdfScanner = () => {
     const [selectedFiles, setSelectedFiles] = useState([]);
-    const [qrCodeData, setQrCodeData] = useState('');
+    const [qrCodeData, setQrCodeData] = useState(''); // eslint-disable-line no-unused-vars
 
     const handleFileChange = (e) => {
         const files = e.target.files;
