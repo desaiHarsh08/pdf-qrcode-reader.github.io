@@ -1,4 +1,3 @@
-
 import PdfScanner from './componensts/PdfScanner';
 
 function App() {

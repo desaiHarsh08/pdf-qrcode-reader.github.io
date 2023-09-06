@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import jsQR from 'jsqr';
-import html2canvas from 'html2canvas';
 import myImage from '../assets/img5.png'
 
 // Set worker paths
@@ -42,11 +41,63 @@ const PdfScanner = () => {
 
                 if (qrCodeData) {
                     console.log("QR Code Data:", qrCodeData);
-                    // Handle qrCodeData as needed
-                    captureAndSaveImage(qrCodeData)
+
+                    // Extract the signature image from the bottom of the page
+                    const signatureImage = await extractSignatureFromPage(page);
+
+                    if (signatureImage) {
+                        console.log("Signature Image:", signatureImage);
+                        const img = document.createElement('img')
+                        img.setAttribute('src', signatureImage)
+                        // document.getElementById('captureImageBox').append(img);
+
+                        var divContainer = document.createElement('div');
+                        divContainer.setAttribute('class', 'border absolute  w-[75%] sm:w-[550px] flex justify-center items-center')
+
+                        const imageBox = document.createElement('div');
+                        imageBox.setAttribute('class', 'bg-white flex justify-center items-center w-full h-full ')
+                        imageBox.append(img);
+
+                        divContainer.append(imageBox);
+                        console.log(divContainer)
+
+                    }
+
+                    captureAndSaveImage(qrCodeData, signatureImage)
                 }
             }
         }
+    };
+
+
+
+    const extractSignatureFromPage = async (page) => {
+        const viewport = page.getViewport({ scale: 1.0 });
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+        // Define the region at the bottom of the canvas where the signature is expected
+        const signatureRegion = {
+            x: 24,
+            y: canvas.height - 165, // Adjust the height as needed to capture the signature
+            width: canvas.width - 222,
+            height: 80, // Adjust the height as needed to capture the signature
+        };
+
+        // Crop the canvas to the signature region
+        const signatureCanvas = document.createElement('canvas');
+        const signatureContext = signatureCanvas.getContext('2d');
+        signatureCanvas.width = signatureRegion.width;
+        signatureCanvas.height = signatureRegion.height;
+        signatureContext.drawImage(canvas, signatureRegion.x, signatureRegion.y, signatureRegion.width, signatureRegion.height, 0, 0, signatureRegion.width, signatureRegion.height);
+
+        // Convert the cropped signature to a data URL
+        const signatureDataUrl = signatureCanvas.toDataURL('image/png');
+
+        return signatureDataUrl;
     };
 
     // Function to convert a PDF page to a canvas
@@ -72,29 +123,31 @@ const PdfScanner = () => {
     };
 
 
-    // Function to capture and save the content of the div as an image
-    const captureAndSaveImage = async (filename) => {
-        const captureImageBox = document.getElementById('captureImageBox');
 
-        if (captureImageBox) {
-            try {
-                const canvas = await html2canvas(captureImageBox); // Capture the content
-                const dataURL = canvas.toDataURL('image/jpeg');
 
-                // Create a blob from the dataURL
-                const blob = dataURItoBlob(dataURL);
+    const captureAndSaveImage = async (filename, imageDataUrl) => {
+        try {
+            // Create a blob from the data URL  
+            const blob = dataURItoBlob(imageDataUrl);
 
-                // Create a download link for the image
-                const downloadLink = document.createElement('a');
-                downloadLink.href = window.URL.createObjectURL(blob);
-                downloadLink.download = `${filename}.jpg`;
-                downloadLink.click();
-            } catch (error) {
-                console.error('Error capturing or saving image:', error);
-                alert('Error capturing or saving image. Please try again.');
-            }
+            // Create a download link for the image
+            const downloadLink = document.createElement('a');
+            downloadLink.href = window.URL.createObjectURL(blob);
+            downloadLink.download = `${filename}.jpg`;
+            downloadLink.click();
+        } catch (error) {
+            console.error('Error capturing or saving image:', error);
+            alert('Error capturing or saving image. Please try again.');
         }
     };
+
+
+
+
+
+
+
+
 
     // Helper function to convert data URI to Blob
     const dataURItoBlob = (dataURI) => {
@@ -128,7 +181,7 @@ const PdfScanner = () => {
     return (
         <div className='h-screen'>
             <nav className='flex  justify-center items-center text-white bg-black py-3'>
-                <h1 className='text-center text-2xl font-medium'>PDF image extraction and renaming</h1>
+                <h1 className='text-center text-xl sm:text-2xl font-medium'>PDF image extraction and renaming</h1>
             </nav>
             <div className="w-full  h-[92%] ">
 
@@ -138,15 +191,10 @@ const PdfScanner = () => {
                     </div>
                     <div>
                         <button className='px-4 py-2 bg-fuchsia-500 text-white font-medium rounded-md hover:bg-fuchsia-600' onClick={scanQrCode}>Scan QR Code in PDF</button>
-                        {/* {qrCodeData && (
-                            <div>
-                                <h2>QR Code Data:</h2>
-                                <p>{qrCodeData}</p>
-                            </div>
-                        )} */}
+
                     </div>
                 </div>
-                <div id="down" className='h-[60%] flex justify-center items-center border-2'>
+                <div id="down" className='h-[60%] flex justify-center items-center '>
                     <img src={myImage} alt="" className='h-[50%]' />
                 </div>
             </div>
@@ -154,7 +202,7 @@ const PdfScanner = () => {
 
 
             <div className="border absolute  w-[75%] sm:w-[550px] top-0 invisible">
-                <div className="captureImageBox bg-white" id='captureImageBox'></div>
+                <div className="captureImageBox bg-white flex justify-center items-center" id='captureImageBox'></div>
             </div>
 
         </div>
