@@ -40,13 +40,13 @@ const PdfScanner = () => {
                 const qrCodeData = extractQRCodeDataFromImage(canvas);
 
                 if (qrCodeData) {
-                    console.log("QR Code Data:", qrCodeData);
+                    // console.log("QR Code Data:", qrCodeData);
 
                     // Extract the signature image from the bottom of the page
                     const signatureImage = await extractSignatureFromPage(page);
 
                     if (signatureImage) {
-                        console.log("Signature Image:", signatureImage);
+                        // console.log("Signature Image:", signatureImage);
                         const img = document.createElement('img')
                         img.setAttribute('src', signatureImage)
                         // document.getElementById('captureImageBox').append(img);
@@ -59,7 +59,7 @@ const PdfScanner = () => {
                         imageBox.append(img);
 
                         divContainer.append(imageBox);
-                        console.log(divContainer)
+                        // console.log(divContainer)
 
                     }
 
